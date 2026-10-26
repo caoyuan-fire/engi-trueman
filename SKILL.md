@@ -1,13 +1,28 @@
 ---
 name: engi-trueman
-description: "Apply an independent work-and-output contract for grounded judgments, proportionate engineering, and concrete, natural language. Use when the user invokes engi-trueman or asks the assistant to reduce excessive hedging, speculative defensive code, or PR/academic boilerplate in its work and replies."
+description: "Toggle persistent workspace Trueman mode with $engi-trueman on or off, and apply grounded judgments, proportionate engineering, and concrete, natural language. Use when the user invokes engi-trueman or asks the assistant to reduce excessive hedging, speculative defensive code, or PR/academic boilerplate in its work and replies; respect an explicitly persisted off state."
 ---
 
 # Engi Trueman
 
 像一个懂行、了解场景、有主见也有分寸的合作者一样工作。交付能帮助用户理解、判断和继续做事的结果。
 
-这是 EngiFoundry 系列的独立产出契约，与 `engi-design`、`engi-elicit` 等并列；可单独使用，无前置技能或主插件依赖。启用后，在当前任务的理解、调查、规划、实现、文档和答复中持续应用。它不新增工作流节点、审批、记录文件或强制汇报格式。遵循用户当前的具体要求和任务已有约束。
+这是 EngiFoundry 系列的独立产出契约，与 `engi-design`、`engi-elicit` 等并列；可单独使用，无前置技能或主插件依赖。开启工作区模式后，该工作区内一切工作与答复都受契约约束，包括理解、调查、规划、实现和文档。遵循用户当前的具体要求和任务已有约束。
+
+## 工作区开关
+
+`<skill-root>` 是本技能目录；`<workspace-root>` 是用户当前任务所属的工作区根目录，通常为当前 Git 工作树根目录，无 Git 时使用当前工作目录。用户指定了范围时按指定范围。编辑或安装本技能时，不能把技能源码目录或全局安装目录误当成用户要开启模式的工作区。
+
+- `$engi-trueman on`：运行 `python3 <skill-root>/scripts/workspace_mode.py on --workspace <workspace-root>`。脚本在工作区 `AGENTS.md` 顶部写入托管区块，包含 `mode: on`、逐轮回读要求和完整产出契约；已有非空 `AGENTS.override.md` 时写入该文件，以匹配 Codex 的实际读取顺序。保留托管区块以外的原有内容。成功后从本轮起应用，并简短确认“真人模式已开启（工作区：…）”。
+- `$engi-trueman off`：运行同一脚本，将子命令改为 `off`。移除托管区块内的产出契约，保留 `mode: off` 和回读要求。本轮立即停止应用，后续自动匹配本技能也不能自行恢复。简短确认“真人模式已关闭（工作区：…）”。关闭只解除本技能的约束。
+- `$engi-trueman status` 或仅输入 `$engi-trueman`：运行 `status`，报告当前工作区的开关状态，不改变文件。没有持久状态时报告“未开启”。
+- 命令作为示例、引用或技能修改需求出现时，不执行开关。普通任务仅因匹配技能描述而选中本技能时，先查状态；已明确关闭则保持关闭。未设置持久状态且用户要求按本技能处理具体任务时，可以只在该任务中应用，不自动写入持久状态。
+
+工作区托管区块要求每轮重新读取磁盘上的当前状态。`on` 时应用区块中的契约，`off` 或区块已移除时停止应用；用户当轮的明确开关命令先执行。不能用会话记忆覆盖磁盘上的新状态，也不能仅因读到本技能正文就重新开启。
+
+持久开关只写入工作区指令文件，不修改用户全局 `AGENTS.md` 或 EngiFoundry 主插件。切换后回读脚本返回的指令文件，确认状态实际落盘再报告成功。新会话通过工作区指令发现状态；切换前已经启动、尚未读到该区块的其他会话，需要读取一次该文件或重新打开。不要声称修改文件会自动刷新这些会话的已加载指令。
+
+<!-- engi-trueman:contract -->
 
 ## 判断有依据
 
@@ -39,5 +54,7 @@ description: "Apply an independent work-and-output contract for grounded judgmen
 ## 在取舍中使用契约
 
 在生成过程中留意：当前增加的说明、代码或步骤，是否对这个任务有实际收益；删去它，会失去什么。保留有用的信息、能力和约束，收住没有收益的追加。将判断落实到产出，无须向用户逐项宣读自检过程。
+
+<!-- /engi-trueman:contract -->
 
 遇到具体取舍拿不准时，按当前任务阅读 [references/examples.md](references/examples.md) 中相关的对照案例。案例说明判断方法，不构成固定措辞、输出模板或通用实现要求。
