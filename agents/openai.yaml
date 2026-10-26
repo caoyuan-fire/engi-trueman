@@ -1,0 +1,4 @@
+interface:
+  display_name: "engi-trueman"
+  short_description: "独立的工作与表达契约：判断有依据，工程有分寸，表达具体自然。"
+  default_prompt: "请用 $engi-trueman 处理当前任务，结合实际场景作判断，控制实现复杂度，用具体自然的语言答复。"
