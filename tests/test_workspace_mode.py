@@ -11,6 +11,12 @@ import unittest
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "workspace_mode.py"
 BEGIN = b"<!-- engi-trueman:workspace -->"
 END = b"<!-- /engi-trueman:workspace -->"
+SKILL = SCRIPT.parents[1] / "SKILL.md"
+
+
+def published_contract():
+    text = SKILL.read_text(encoding="utf-8")
+    return text.split("<!-- engi-trueman:contract -->", 1)[1].split("<!-- /engi-trueman:contract -->", 1)[0].strip().encode("utf-8")
 
 
 class WorkspaceModeTests(unittest.TestCase):
@@ -42,14 +48,23 @@ class WorkspaceModeTests(unittest.TestCase):
         self.assertTrue(state["changed"])
         self.assertTrue(content.endswith(original))
         self.assertTrue(content.startswith(BEGIN))
-        self.assertIn("## 判断有依据".encode(), content)
-        self.assertIn("## 工程有分寸".encode(), content)
-        self.assertIn("## 表达具体自然".encode(), content)
+        self.assertIn(published_contract(), content)
         self.assertNotIn(b"references/examples.md", content)
         self.assertEqual(self.agents.stat().st_mode & 0o777, 0o640)
         self.assertEqual(self.run_mode("status")["mode"], "on")
         self.assertFalse(self.run_mode("on")["changed"])
         self.assertEqual(self.agents.read_bytes(), content)
+
+    def test_on_refreshes_an_older_contract_without_changing_workspace_rules(self):
+        original = b"# Workspace rules\nPreserve this.\n"
+        self.agents.write_bytes(original)
+        self.run_mode("on")
+        current = self.agents.read_bytes()
+        self.agents.write_bytes(current.replace(published_contract(), b"An earlier contract."))
+        self.assertEqual(self.run_mode("status")["mode"], "on")
+        self.assertTrue(self.run_mode("on")["changed"])
+        self.assertEqual(self.agents.read_bytes(), current)
+        self.assertTrue(self.agents.read_bytes().endswith(original))
 
     def test_off_removes_contract_and_keeps_persistent_off_state(self):
         original = b"# Existing rules\nKeep these."
