@@ -1,4 +1,4 @@
 interface:
-  display_name: "engi-trueman"
+  display_name: "Engi Trueman"
   short_description: "工作区真人模式：以使用者视角检验产出，让判断、实现与表达贴合实际任务。"
   default_prompt: "$engi-trueman on"
